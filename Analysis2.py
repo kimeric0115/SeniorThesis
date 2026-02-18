@@ -60,7 +60,7 @@ for temp in type:
 
         # Create signed dummy variables for each event horizon
         event_cols = []
-        for h in range(-12,13):
+        for h in range(-9,10):
             if h == -1: # we want to use the period before the event as a baseline
                 continue
             colname = f"event_{h}"
