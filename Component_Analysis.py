@@ -29,7 +29,7 @@ for i in range(len(category_names)):
     df_arr.append(pd.read_excel(file_path, sheet_name=category_names[i]))
 
 models = {}
-type = ["Combined", "Rent", "Jeonse"]
+type = ["Combined", "Rent", "Jeonse", "Price"]
 
 for temp in type:
     models = {}
@@ -50,14 +50,17 @@ for temp in type:
         # y_rent, _ = sm.tsa.filters.hpfilter(df["Price/Rent"],lamb = 1600)
         # y_jeonse, _ = sm.tsa.filters.hpfilter(df["Price/Jeonse"], lamb = 1600)
 
-        y_combined = df["Price/Nonownership Ratio"]
-        y_rent = df["Price/Rent"]
-        y_jeonse = df["Price/Jeonse"]
+        y_price = df["Component Price"]
+        y_combined = df["Component Non-Ownership"]
+        y_rent = df["Component Rent"]
+        y_jeonse = df["Component Jeonse"]
 
         if temp=="Combined":
             df["y"] = y_combined
         elif temp == "Rent":
             df["y"] = y_rent
+        elif temp == "Price":
+            df["y"] = y_price
         else:
             df["y"] = y_jeonse
 
@@ -77,7 +80,6 @@ for temp in type:
         df_es = pd.concat(windows).sort_index()
 
         # Create dummy variables for each event horizon
-
         event_cols = []
         for h in range(-6,13):
             if h == -1: # we want to use the period before the event as a baseline
@@ -90,7 +92,7 @@ for temp in type:
         df_es["ratio_lag2"] = df_es.groupby("event_id")["y"].shift(2)
 
 
-        lag_cols = ["ratio_lag1","ratio_lag2"] #
+        lag_cols = ["ratio_lag1", "ratio_lag2"]
 
         tmp = df_es[event_cols + lag_cols].dropna()
         event_cols = [c for c in event_cols if tmp[c].nunique() > 1]
@@ -109,7 +111,7 @@ for temp in type:
         models[category_names[i]] = model
         i += 1
 
-    out_path = os.path.join(folder_path, f"{temp}_results3.xlsx")  # <<< goes into same folder
+    out_path = os.path.join(folder_path, f"{temp}_component_results.xlsx")  # <<< goes into same folder
     with pd.ExcelWriter(out_path) as writer:
         for name, res in models.items():
             coef_table = res.summary2().tables[1]  # coeffs, std err, t/z, p, CI
